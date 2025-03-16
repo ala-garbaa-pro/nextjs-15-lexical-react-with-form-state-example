@@ -6,7 +6,7 @@ import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Code2, RefreshCw, AlertCircle } from "lucide-react";
+import { Code2, RefreshCw, AlertCircle, FileEdit } from "lucide-react";
 import { toast } from "sonner";
 
 // Debounce function to limit how often a function can be called
@@ -140,9 +140,31 @@ export default function TestFormPage() {
     }
   }, []);
 
+  // Function to add a test element to the content
+  const addTestElement = React.useCallback(() => {
+    console.log("[TestFormPage] Adding test element to content");
+    // Create a timestamp for uniqueness
+    const timestamp = new Date().toLocaleTimeString();
+    // Add a new paragraph with the timestamp
+    const newContent =
+      content +
+      `<p style="color: blue;">Test element added at ${timestamp}</p>`;
+    setContent(newContent);
+    toast.success("Added new element to content");
+  }, [content]);
+
   return (
     <div className="container py-10">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addTestElement}
+          className="flex items-center gap-1"
+        >
+          <FileEdit className="h-4 w-4" />
+          Add Test Element
+        </Button>
         <ThemeToggle />
       </div>
       <div className="max-w-4xl">

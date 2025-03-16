@@ -85,61 +85,67 @@ export function LexicalRichTextEditor({
     });
   }, [editor]);
 
-  // Set initial content when the editor is mounted - only once
+  // Track the previous content to detect changes
+  const previousContentRef = useRef<string>("");
+
+  // Update editor content whenever initialContent changes
   useEffect(() => {
     console.log("[LexicalEditor] useEffect for initialContent triggered", {
       editor: !!editor,
       hasInitialContent: !!initialContent,
+      previousContent: previousContentRef.current,
     });
+
     if (editor && initialContent && typeof window !== "undefined") {
-      // We need to set this flag to prevent infinite loops
-      const isInitialContentSet = (editor as any)._initialContentSet;
+      // Skip if the content hasn't changed
+      if (initialContent === previousContentRef.current) {
+        console.log("[LexicalEditor] Content unchanged, skipping update");
+        return;
+      }
 
-      if (!isInitialContentSet) {
-        console.log("[LexicalEditor] Setting initial content", {
-          initialContent,
-        });
+      // Update the previous content reference
+      previousContentRef.current = initialContent;
 
-        try {
-          // Import the necessary functions for HTML parsing
-          import("@lexical/html").then(({ $generateNodesFromDOM }) => {
-            // Create a DOM parser
-            const parser = new DOMParser();
-            // Parse the HTML string into a DOM document
-            const dom = parser.parseFromString(initialContent, "text/html");
+      console.log("[LexicalEditor] Setting content", {
+        initialContent,
+      });
 
-            // Update the editor with the parsed HTML content
-            editor.update(() => {
-              // Clear the editor first
-              const root = $getRoot();
-              root.clear();
+      try {
+        // Import the necessary functions for HTML parsing
+        import("@lexical/html").then(({ $generateNodesFromDOM }) => {
+          // Create a DOM parser
+          const parser = new DOMParser();
+          // Parse the HTML string into a DOM document
+          const dom = parser.parseFromString(initialContent, "text/html");
 
-              // Generate nodes from the DOM and insert them into the editor
-              const nodes = $generateNodesFromDOM(editor, dom);
-              if (nodes.length > 0) {
-                root.append(...nodes);
-                console.log(
-                  "[LexicalEditor] Set formatted HTML content in editor"
-                );
-              } else {
-                // Fallback if no nodes were generated
-                console.log(
-                  "[LexicalEditor] No nodes generated from HTML, using fallback"
-                );
-                const paragraph = $createParagraphNode();
-                const textContent = dom.body.textContent || "";
-                const textNode = $createTextNode(textContent);
-                paragraph.append(textNode);
-                root.append(paragraph);
-              }
-            });
+          // Update the editor with the parsed HTML content
+          editor.update(() => {
+            // Clear the editor first
+            const root = $getRoot();
+            root.clear();
 
-            // Mark that we've set the initial content
-            (editor as any)._initialContentSet = true;
+            // Generate nodes from the DOM and insert them into the editor
+            const nodes = $generateNodesFromDOM(editor, dom);
+            if (nodes.length > 0) {
+              root.append(...nodes);
+              console.log(
+                "[LexicalEditor] Set formatted HTML content in editor"
+              );
+            } else {
+              // Fallback if no nodes were generated
+              console.log(
+                "[LexicalEditor] No nodes generated from HTML, using fallback"
+              );
+              const paragraph = $createParagraphNode();
+              const textContent = dom.body.textContent || "";
+              const textNode = $createTextNode(textContent);
+              paragraph.append(textNode);
+              root.append(paragraph);
+            }
           });
-        } catch (error) {
-          console.error("[LexicalEditor] Error setting initial content", error);
-        }
+        });
+      } catch (error) {
+        console.error("[LexicalEditor] Error setting content", error);
       }
     }
   }, [editor, initialContent]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $generateHtmlFromNodes } from "@lexical/html";
 import { $getRoot } from "lexical";
@@ -11,6 +11,8 @@ type OnChangePluginProps = {
 
 export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
   const [editor] = useLexicalComposerContext();
+  // Track if the update is from a programmatic change
+  const isProgrammaticChangeRef = useRef(false);
 
   useEffect(() => {
     console.log("[OnChangePlugin] useEffect triggered", {
@@ -51,12 +53,36 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
       return "";
     };
 
+    // Listen for programmatic changes
+    const removeUpdateListener = editor.registerUpdateListener(
+      ({ dirtyElements, dirtyLeaves, prevEditorState, tags }) => {
+        // Check if this update was triggered by setting content programmatically
+        if (tags.has("historic") && tags.has("initialize-editor")) {
+          console.log("[OnChangePlugin] Detected programmatic content change");
+          isProgrammaticChangeRef.current = true;
+
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            isProgrammaticChangeRef.current = false;
+          }, 100);
+        }
+      }
+    );
+
     // We need to debounce the updates to avoid too many re-renders
     let timeoutId: any = null;
 
-    console.log("[OnChangePlugin] Registering update listener");
-    const removeListener = editor.registerUpdateListener(() => {
-      console.log("[OnChangePlugin] Update listener triggered");
+    console.log("[OnChangePlugin] Registering content update listener");
+    const removeContentListener = editor.registerUpdateListener(() => {
+      console.log("[OnChangePlugin] Content update listener triggered");
+
+      // Skip if this update was triggered by setting content programmatically
+      if (isProgrammaticChangeRef.current) {
+        console.log(
+          "[OnChangePlugin] Skipping update due to programmatic change"
+        );
+        return;
+      }
 
       // Clear any existing timeout
       if (timeoutId) {
@@ -73,11 +99,12 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
     });
 
     return () => {
-      // Clean up the timeout and listener
+      // Clean up the timeout and listeners
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      removeListener();
+      removeContentListener();
+      removeUpdateListener();
     };
   }, [editor, onChange]);
 

@@ -26,6 +26,8 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 // Import HTML utilities for serialization/deserialization
 import { $generateHtmlFromNodes } from "@lexical/html";
 import { useCallback, useEffect, useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 // Components
 import TreeViewPlugin from "@/components/custom/lexical-editor/plugins/tree-view-plugin";
@@ -242,14 +244,15 @@ export const LexicalRichTextEditor = React.memo(
           <div className="editor-toolbar">
             <ToolbarPlugin />
             {!autoSave && (
-              <button
+              <Button
                 onClick={handleSaveContent}
-                className="save-button"
-                type="button"
-                aria-label="Save content"
+                variant="outline"
+                size="sm"
+                className="mr-2 flex items-center gap-1"
               >
+                <Save className="h-4 w-4" />
                 Save
-              </button>
+              </Button>
             )}
           </div>
           <div className="editor-inner">

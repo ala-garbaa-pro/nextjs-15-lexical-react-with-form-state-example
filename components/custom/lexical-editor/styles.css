@@ -1,7 +1,5 @@
 .editor-container {
-  margin: 20px auto 20px auto;
   border-radius: 2px;
-  /* max-width: 600px; */
   color: var(--foreground);
   position: relative;
   line-height: 20px;
@@ -10,6 +8,36 @@
   border-radius: 0.5rem;
   border: 1px solid var(--border);
   overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.save-button {
+  margin-right: 10px;
+  padding: 6px 12px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.save-button:hover {
+  background-color: var(--primary-foreground);
+}
+
+.save-button:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .editor-inner {

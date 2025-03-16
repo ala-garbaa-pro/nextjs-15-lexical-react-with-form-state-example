@@ -170,8 +170,8 @@ export default function ToolbarPlugin() {
   }, [editor, updateToolbar]);
 
   return (
-    <div className="toolbar" onMouseDown={preventBlur}>
-      <div className="flex flex-wrap gap-1 p-1 border-b border-input bg-background dark:bg-background">
+    <div className="toolbar flex-grow" onMouseDown={preventBlur}>
+      <div className="flex flex-wrap gap-1 p-1">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -82,6 +82,7 @@ export default function TestFormPage() {
       } else {
         console.log("[TestFormPage] Ignoring Lexical update in code mode");
       }
+      toast.success("Content updated successfully");
     },
     [editorMode]
   );
@@ -220,9 +221,9 @@ export default function TestFormPage() {
 
     // Update the mode
     setEditorMode(newMode);
-    toast.info(
-      `Switched to ${newMode === "visual" ? "Visual" : "Code"} editing mode`
-    );
+    // toast.info(
+    //   `Switched to ${newMode === "visual" ? "Visual" : "Code"} editing mode`
+    // );
 
     // Reset the flag after a short delay
     setTimeout(() => {
@@ -231,7 +232,7 @@ export default function TestFormPage() {
   }, []);
 
   return (
-    <div className="container py-10">
+    <div className="container py-10 max-w-4xl mx-auto">
       <div className="flex justify-between mb-4">
         <Tabs
           value={editorMode}
@@ -249,7 +250,7 @@ export default function TestFormPage() {
         </Tabs>
 
         <div className="flex gap-2">
-          <Button
+          {/* <Button
             variant="outline"
             size="sm"
             onClick={addTestElement}
@@ -257,12 +258,12 @@ export default function TestFormPage() {
           >
             <FileEdit className="h-4 w-4" />
             Add Test Element
-          </Button>
+          </Button> */}
           <ThemeToggle />
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      <div className="">
         <Tabs value={editorMode} className="w-full">
           <TabsContent value="visual" className="mt-0">
             <div className="mb-2">
@@ -272,11 +273,12 @@ export default function TestFormPage() {
               </p>
             </div>
             <div className="border rounded-md">
-              {/* Use key to prevent unnecessary re-renders */}
+              {/* Use key to prevent unnecessary re-renders and disable autoSave */}
               <LexicalRichTextEditor
                 key="visual-editor"
                 initialContent={content}
                 onChange={handleContentChange}
+                autoSave={false} // Disable auto-save to prevent cursor jumping
               />
             </div>
           </TabsContent>
@@ -334,12 +336,12 @@ export default function TestFormPage() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <h3 className="text-lg font-medium mb-2">Current HTML Content:</h3>
           <div className="p-4 border rounded bg-muted/30">
             <pre className="whitespace-pre-wrap break-all">{content}</pre>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

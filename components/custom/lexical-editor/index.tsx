@@ -199,7 +199,6 @@ export function LexicalRichTextEditor({
           <HistoryPlugin />
           <AutoFocusPlugin />
           <OnChangePlugin onChange={handleEditorChange} />
-          <TreeViewPlugin />
           {/* Capture the editor instance */}
           <EditorCapturePlugin setEditor={setEditor} />
         </div>

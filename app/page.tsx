@@ -3,10 +3,13 @@
 import React from "react";
 import { LexicalRichTextEditor } from "@/components/custom/lexical-editor";
 import Editor from "@monaco-editor/react";
+import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function TestFormPage() {
   console.log("[TestFormPage] Component rendering");
   const [content, setContent] = React.useState("<p>init <b>content</b></p>");
+  const { theme } = useTheme();
 
   React.useEffect(() => {
     console.log("[TestFormPage] Component mounted");
@@ -20,6 +23,11 @@ export default function TestFormPage() {
       contentLength: content?.length,
     });
   }, [content]);
+
+  // Log when theme changes
+  React.useEffect(() => {
+    console.log("[TestFormPage] Theme changed", { theme });
+  }, [theme]);
 
   const handleContentChange = React.useCallback((html: string) => {
     console.log("[TestFormPage] handleContentChange called", {
@@ -37,6 +45,9 @@ export default function TestFormPage() {
 
   return (
     <div className="container py-10">
+      <div className="flex justify-end mb-4">
+        <ThemeToggle />
+      </div>
       <div className="max-w-4xl">
         <div className="mb-6  mx-auto">
           <div className="mb-2">
@@ -57,10 +68,19 @@ export default function TestFormPage() {
           <Editor
             height="20vh"
             defaultLanguage="html"
-            defaultValue={content}
-            theme=""
+            value={content}
+            theme={theme === "light" ? "light" : "vs-dark"}
+            options={{
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 14,
+              wordWrap: "on",
+              readOnly: true,
+            }}
+            loading={
+              <div className="p-4 text-muted-foreground">Loading editor...</div>
+            }
           />
-          ;
           <div className="p-4 border rounded bg-muted/30">
             <pre className="whitespace-pre-wrap break-all">{content}</pre>
           </div>

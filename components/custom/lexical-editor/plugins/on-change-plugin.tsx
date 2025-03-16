@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $generateHtmlFromNodes } from "@lexical/html";
+import { $getRoot } from "lexical";
 
 type OnChangePluginProps = {
   onChange: (html: string) => void;
@@ -15,29 +17,30 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
       hasEditor: !!editor,
     });
 
-    // We need a more reliable way to get the content
+    // Get formatted HTML content from the editor
     const getHtmlFromEditor = () => {
       console.log("[OnChangePlugin] getHtmlFromEditor called");
       if (typeof window !== "undefined") {
         try {
-          // Use the editor's serialization API
+          // Use the editor's serialization API with proper HTML generation
           return editor.getEditorState().read(() => {
             console.log("[OnChangePlugin] Reading editor state");
-            // Get the text content directly from the editor state
-            const root = editor._rootElement;
-            if (root) {
-              // Get the actual text content
-              const textContent = root.textContent || "";
-              console.log("[OnChangePlugin] Got text content", { textContent });
 
-              // If there's text content, return a simple paragraph with the text
-              if (textContent.trim()) {
-                const html = `<p>${textContent}</p>`;
-                console.log("[OnChangePlugin] Created HTML", { html });
-                return html;
-              }
-            }
-            return "";
+            // Get the root node
+            const root = $getRoot();
+
+            // Generate HTML from the editor nodes - this preserves formatting
+            const html = $generateHtmlFromNodes(editor, null);
+            console.log("[OnChangePlugin] Generated formatted HTML", {
+              html,
+              htmlPreview: html?.substring(0, 100),
+            });
+
+            // Also log the text content for debugging
+            const textContent = root.getTextContent() || "";
+            console.log("[OnChangePlugin] Got text content", { textContent });
+
+            return html || "";
           });
         } catch (error) {
           console.error("[OnChangePlugin] Error getting HTML", error);

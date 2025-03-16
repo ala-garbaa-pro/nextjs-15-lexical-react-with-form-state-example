@@ -19,8 +19,8 @@ import { ListItemNode, ListNode } from "@lexical/list";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 
-// We're not using these functions directly anymore
-// import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
+// Import HTML utilities for serialization/deserialization
+import { $generateHtmlFromNodes } from "@lexical/html";
 import { useCallback, useEffect, useState, useRef } from "react";
 
 // Components
@@ -101,33 +101,42 @@ export function LexicalRichTextEditor({
         });
 
         try {
-          // Extract text from HTML
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = initialContent;
-          const textContent = tempDiv.textContent || "";
+          // Import the necessary functions for HTML parsing
+          import("@lexical/html").then(({ $generateNodesFromDOM }) => {
+            // Create a DOM parser
+            const parser = new DOMParser();
+            // Parse the HTML string into a DOM document
+            const dom = parser.parseFromString(initialContent, "text/html");
 
-          if (textContent.trim()) {
-            console.log("[LexicalEditor] Extracted text content", {
-              textContent,
-            });
-
-            // Update the editor with the text content
+            // Update the editor with the parsed HTML content
             editor.update(() => {
+              // Clear the editor first
               const root = $getRoot();
               root.clear();
 
-              // Create a paragraph with the text
-              const paragraph = $createParagraphNode();
-              const textNode = $createTextNode(textContent);
-              paragraph.append(textNode);
-              root.append(paragraph);
-
-              console.log("[LexicalEditor] Set initial content in editor");
+              // Generate nodes from the DOM and insert them into the editor
+              const nodes = $generateNodesFromDOM(editor, dom);
+              if (nodes.length > 0) {
+                root.append(...nodes);
+                console.log(
+                  "[LexicalEditor] Set formatted HTML content in editor"
+                );
+              } else {
+                // Fallback if no nodes were generated
+                console.log(
+                  "[LexicalEditor] No nodes generated from HTML, using fallback"
+                );
+                const paragraph = $createParagraphNode();
+                const textContent = dom.body.textContent || "";
+                const textNode = $createTextNode(textContent);
+                paragraph.append(textNode);
+                root.append(paragraph);
+              }
             });
 
             // Mark that we've set the initial content
             (editor as any)._initialContentSet = true;
-          }
+          });
         } catch (error) {
           console.error("[LexicalEditor] Error setting initial content", error);
         }

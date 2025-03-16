@@ -214,10 +214,20 @@ export default function TestFormPage() {
   // Handle mode change
   const handleModeChange = React.useCallback((newMode: EditorMode) => {
     console.log(`[TestFormPage] Switching to ${newMode} mode`);
+
+    // Set a flag to prevent update loops during mode change
+    isUpdatingFromActiveEditor.current = true;
+
+    // Update the mode
     setEditorMode(newMode);
     toast.info(
       `Switched to ${newMode === "visual" ? "Visual" : "Code"} editing mode`
     );
+
+    // Reset the flag after a short delay
+    setTimeout(() => {
+      isUpdatingFromActiveEditor.current = false;
+    }, 100);
   }, []);
 
   return (
@@ -262,7 +272,9 @@ export default function TestFormPage() {
               </p>
             </div>
             <div className="border rounded-md">
+              {/* Use key to prevent unnecessary re-renders */}
               <LexicalRichTextEditor
+                key="visual-editor"
                 initialContent={content}
                 onChange={handleContentChange}
               />

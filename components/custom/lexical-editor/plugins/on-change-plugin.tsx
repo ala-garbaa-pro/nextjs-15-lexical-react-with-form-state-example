@@ -13,6 +13,8 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
   const [editor] = useLexicalComposerContext();
   // Track if the update is from a programmatic change
   const isProgrammaticChangeRef = useRef(false);
+  // Track the last HTML to avoid unnecessary updates
+  const lastHtmlRef = useRef<string>("");
 
   useEffect(() => {
     console.log("[OnChangePlugin] useEffect triggered", {
@@ -57,8 +59,10 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
     const removeUpdateListener = editor.registerUpdateListener(
       ({ dirtyElements, dirtyLeaves, prevEditorState, tags }) => {
         // Check if this update was triggered by setting content programmatically
-        if (tags.has("historic") && tags.has("initialize-editor")) {
-          console.log("[OnChangePlugin] Detected programmatic content change");
+        if (tags.has("historic") || tags.has("initialize-editor")) {
+          console.log("[OnChangePlugin] Detected programmatic content change", {
+            tags,
+          });
           isProgrammaticChangeRef.current = true;
 
           // Reset the flag after a short delay
@@ -73,11 +77,17 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
     let timeoutId: any = null;
 
     console.log("[OnChangePlugin] Registering content update listener");
-    const removeContentListener = editor.registerUpdateListener(() => {
-      console.log("[OnChangePlugin] Content update listener triggered");
+    const removeContentListener = editor.registerUpdateListener(({ tags }) => {
+      console.log("[OnChangePlugin] Content update listener triggered", {
+        tags,
+      });
 
       // Skip if this update was triggered by setting content programmatically
-      if (isProgrammaticChangeRef.current) {
+      if (
+        isProgrammaticChangeRef.current ||
+        tags.has("historic") ||
+        tags.has("initialize-editor")
+      ) {
         console.log(
           "[OnChangePlugin] Skipping update due to programmatic change"
         );
@@ -91,10 +101,25 @@ export default function OnChangePlugin({ onChange }: OnChangePluginProps) {
 
       // Set a new timeout to debounce the updates
       timeoutId = setTimeout(() => {
+        // Check again if we're in a programmatic update (for safety)
+        if (isProgrammaticChangeRef.current) {
+          console.log(
+            "[OnChangePlugin] Still in programmatic update, skipping callback"
+          );
+          return;
+        }
+
         // Get HTML content and call the onChange callback
         const html = getHtmlFromEditor();
-        console.log("[OnChangePlugin] Calling onChange with HTML", { html });
-        onChange(html);
+
+        // Only call onChange if the HTML has actually changed
+        if (html !== lastHtmlRef.current) {
+          lastHtmlRef.current = html;
+          console.log("[OnChangePlugin] Calling onChange with HTML", { html });
+          onChange(html);
+        } else {
+          console.log("[OnChangePlugin] HTML unchanged, skipping update");
+        }
       }, 100); // 100ms debounce
     });
 
